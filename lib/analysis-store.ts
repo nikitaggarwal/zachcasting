@@ -1,8 +1,10 @@
 import "server-only";
 import fs from "node:fs";
 import path from "node:path";
-import Database from "better-sqlite3";
 import type { VideoAnalysis } from "@/lib/types";
+
+type BetterCtor = typeof import("better-sqlite3");
+type SqlConn = InstanceType<BetterCtor>;
 
 function resolveDataDir(): string {
   const fromEnv = process.env.DATA_DIR?.trim();
@@ -16,10 +18,11 @@ function resolveDataDir(): string {
 const DATA_DIR = resolveDataDir();
 const DB_FILE = path.join(DATA_DIR, "analyses.sqlite");
 
-let dbInstance: Database.Database | null = null;
+let dbInstance: SqlConn | null = null;
 let dbInitFailed = false;
+let opening: Promise<SqlConn | null> | null = null;
 
-function ensureSchema(database: Database.Database) {
+function ensureSchema(database: SqlConn) {
   database.exec(`
     CREATE TABLE IF NOT EXISTS video_analysis (
       youtube_id TEXT PRIMARY KEY NOT NULL,
@@ -35,23 +38,33 @@ function ensureSchema(database: Database.Database) {
   database.pragma("journal_mode = WAL");
 }
 
-function openDb(): Database.Database | null {
+async function resolveDb(): Promise<SqlConn | null> {
   if (dbInitFailed) return null;
   if (dbInstance) return dbInstance;
-  try {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-    const database = new Database(DB_FILE);
-    ensureSchema(database);
-    dbInstance = database;
-    return database;
-  } catch (e) {
-    dbInitFailed = true;
-    console.warn(
-      "[analysis-store] SQLite unavailable (read-only disk or missing native build); continuing without persistence.",
-      e
-    );
-    return null;
-  }
+
+  opening ??= (async (): Promise<SqlConn | null> => {
+    try {
+      const mod = await import("better-sqlite3");
+      const BetterSqlite = (mod as { default?: BetterCtor } & Partial<BetterCtor>)
+        .default ?? (mod as unknown as BetterCtor);
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+      const database = new BetterSqlite(DB_FILE);
+      ensureSchema(database);
+      dbInstance = database;
+      return database;
+    } catch (e) {
+      dbInitFailed = true;
+      console.warn(
+        "[analysis-store] SQLite unavailable (read-only disk or missing native build); continuing without persistence.",
+        e
+      );
+      return null;
+    }
+  })().finally(() => {
+    opening = null;
+  });
+
+  return opening;
 }
 
 /** Stable key for TTL + cache invalidation when the cast roster changes */
@@ -68,8 +81,10 @@ export type UpsertVideoAnalysisInput = {
   analysis: VideoAnalysis;
 };
 
-export function upsertVideoAnalysis(input: UpsertVideoAnalysisInput): void {
-  const db = openDb();
+export async function upsertVideoAnalysis(
+  input: UpsertVideoAnalysisInput
+): Promise<void> {
+  const db = await resolveDb();
   if (!db) return;
   const payload = JSON.stringify(input.analysis);
   const now = Date.now();
@@ -104,10 +119,10 @@ export function upsertVideoAnalysis(input: UpsertVideoAnalysisInput): void {
 }
 
 /** Latest saved analysis for a video (any channel / roster). */
-export function getStoredVideoAnalysis(
+export async function getStoredVideoAnalysis(
   youtubeId: string
-): VideoAnalysis | null {
-  const db = openDb();
+): Promise<VideoAnalysis | null> {
+  const db = await resolveDb();
   if (!db) return null;
   try {
     const row = db
@@ -125,13 +140,13 @@ export function getStoredVideoAnalysis(
 /**
  * Pulse-only warm read: skip YouTube / Claude until TTL expires and cast list matches.
  */
-export function tryGetWarmPulseAnalysis(args: {
+export async function tryGetWarmPulseAnalysis(args: {
   youtubeId: string;
   pulseChannelId: string;
   castSignature: string;
   maxAgeSeconds: number;
-}): VideoAnalysis | null {
-  const db = openDb();
+}): Promise<VideoAnalysis | null> {
+  const db = await resolveDb();
   if (!db) return null;
   try {
     const row = db

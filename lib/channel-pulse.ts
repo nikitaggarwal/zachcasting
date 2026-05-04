@@ -235,7 +235,7 @@ async function buildChannelPulse(
   const analyses: VideoAnalysis[] = [];
   for (const vid of videoIds) {
     try {
-      const warm = tryGetWarmPulseAnalysis({
+      const warm = await tryGetWarmPulseAnalysis({
         youtubeId: vid,
         pulseChannelId: cfg.channelId,
         castSignature: castSig,
@@ -248,7 +248,7 @@ async function buildChannelPulse(
 
       const a = await analyzeOneVideo(cfg, vid);
       if (a) {
-        upsertVideoAnalysis({
+        await upsertVideoAnalysis({
           youtubeId: vid,
           channelId: cfg.channelId,
           castSignature: castSig,
@@ -313,7 +313,7 @@ export async function hydrateVideoAnalysisFromChannelUploadsIfNeeded(
   const castSig = normalizeCastSignature(cfg.castNames);
   const a = await analyzeOneVideo(cfg, youtubeIdLike);
   if (!a) return null;
-  upsertVideoAnalysis({
+  await upsertVideoAnalysis({
     youtubeId: youtubeIdLike,
     channelId: cfg.channelId,
     castSignature: castSig,
@@ -326,7 +326,7 @@ export async function hydrateVideoAnalysisFromChannelUploadsIfNeeded(
 export async function fetchPulseCachedAnalysisForVideo(
   youtubeIdLike: string
 ): Promise<VideoAnalysis | null> {
-  const cached = getStoredVideoAnalysis(youtubeIdLike);
+  const cached = await getStoredVideoAnalysis(youtubeIdLike);
   if (cached) return cached;
   return hydrateVideoAnalysisFromChannelUploadsIfNeeded(youtubeIdLike);
 }

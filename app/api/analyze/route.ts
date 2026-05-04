@@ -103,7 +103,7 @@ export async function POST(req: Request) {
       batch
     );
 
-    upsertVideoAnalysis({
+    await upsertVideoAnalysis({
       youtubeId: videoId,
       channelId: meta.channelId || "_unknown_channel",
       castSignature: normalizeCastSignature(names),
