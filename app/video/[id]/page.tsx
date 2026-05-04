@@ -5,6 +5,9 @@ import { isLikelyYoutubeVideoId } from "@/lib/youtube";
 
 type Props = { params: Promise<{ id: string }> };
 
+export const maxDuration = 300;
+export const runtime = "nodejs";
+
 export default async function VideoPage({ params }: Props) {
   const { id } = await params;
   const mock = findMockVideo(id) ?? null;

@@ -14,6 +14,7 @@ import {
 } from "@/lib/analysis-store";
 
 export const maxDuration = 300;
+export const runtime = "nodejs";
 
 type Body = {
   url: string;

@@ -6,6 +6,9 @@ import { SentimentBar, SentimentLegend } from "@/components/SentimentBar";
 
 /** Server-render with live pulse cache; avoids baking API data at build time */
 export const dynamic = "force-dynamic";
+/** Native SQLite + long pulse pipeline — keep on Node; increase limit on Vercel Pro if needed. */
+export const maxDuration = 300;
+export const runtime = "nodejs";
 
 function alertToneClass(tone: "amber" | "coral" | "neutral") {
   if (tone === "amber")
