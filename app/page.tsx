@@ -6,6 +6,8 @@ import { getAlerts, listPulseSummaries } from "@/lib/data";
 import { SentimentBar, SentimentLegend } from "@/components/SentimentBar";
 import type { PulseAlert, VideoPulseSummary } from "@/lib/types";
 
+/** Skip static pre-render; page is dynamic on every request but the shell renders instantly via Suspense. */
+export const dynamic = "force-dynamic";
 /** Native SQLite + long pulse pipeline — keep on Node; increase limit on Vercel Pro if needed. */
 export const maxDuration = 300;
 export const runtime = "nodejs";
