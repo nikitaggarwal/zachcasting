@@ -9,7 +9,8 @@
     "dev": "next dev",
     "build": "next build --webpack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "vercel:env": "node scripts/sync-env-to-vercel.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.92.0",
