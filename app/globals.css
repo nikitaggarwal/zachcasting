@@ -1,0 +1,138 @@
+@import "tailwindcss";
+
+:root {
+  --cast-teal-deep: #0c3d3d;
+  --cast-teal-mid: #145050;
+  --cast-green-ink: #0a2e28;
+  --cast-gold: #d4a24c;
+  --cast-gold-soft: rgba(212, 162, 76, 0.35);
+  --cast-coral: #c75c5c;
+  --cast-coral-soft: rgba(199, 92, 92, 0.35);
+  --cast-frost: rgba(255, 255, 255, 0.12);
+  --cast-frost-border: rgba(255, 255, 255, 0.15);
+  --cast-text: rgba(255, 255, 255, 0.92);
+  --cast-text-muted: rgba(255, 255, 255, 0.62);
+  --font-display: var(--font-playfair);
+  --font-body: var(--font-dm-sans);
+}
+
+@theme inline {
+  --font-sans: var(--font-dm-sans);
+  --font-serif: var(--font-playfair);
+  --color-cast-gold: #d4a24c;
+  --color-cast-coral: #c75c5c;
+  --color-cast-teal: #0c3d3d;
+}
+
+html {
+  height: 100%;
+}
+
+body {
+  min-height: 100%;
+  margin: 0;
+  color: var(--cast-text);
+  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  background: radial-gradient(
+      ellipse 120% 80% at 20% 0%,
+      rgba(20, 80, 70, 0.55) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 90% 70% at 90% 30%,
+      rgba(18, 55, 48, 0.5) 0%,
+      transparent 50%
+    ),
+    linear-gradient(
+      165deg,
+      var(--cast-green-ink) 0%,
+      var(--cast-teal-deep) 38%,
+      var(--cast-teal-mid) 100%
+    );
+  background-attachment: fixed;
+}
+
+.font-display {
+  font-family: var(--font-display), ui-serif, Georgia, serif;
+}
+
+/* Ambient background motion — abstract only (no text) */
+@keyframes ambient-blob-a {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(28px, -32px) scale(1.06);
+    opacity: 0.92;
+  }
+}
+@keyframes ambient-blob-b {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1.02);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-22px, 24px) scale(0.98);
+    opacity: 0.88;
+  }
+}
+@keyframes ambient-ring {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+@keyframes ambient-ring-reverse {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(-360deg);
+  }
+}
+@keyframes ambient-drift-ring {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-16px, 20px) scale(1.03);
+    opacity: 0.85;
+  }
+}
+@keyframes ambient-svg-drift {
+  0%,
+  100% {
+    transform: translate(0, 0);
+    opacity: 0.9;
+  }
+  50% {
+    transform: translate(-12px, 8px);
+    opacity: 1;
+  }
+}
+
+.frosted-card {
+  background: var(--cast-frost);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--cast-frost-border);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+}
+
+.text-positive {
+  color: var(--cast-gold);
+}
+.text-negative {
+  color: #e8918e;
+}
+.text-neutral-data {
+  color: rgba(255, 255, 255, 0.72);
+}
