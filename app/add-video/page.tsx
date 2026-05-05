@@ -78,7 +78,7 @@ export default function AddVideoPage() {
         <p className="mt-3 text-white/60">
           Fetches public comments via YouTube Data API, then runs batched Claude
           analysis. Requires env keys on the server — until then, use{" "}
-          <Link href="/" className="text-[var(--cast-gold)] underline-offset-2 hover:underline">
+          <Link href="/roster" className="text-[var(--cast-gold)] underline-offset-2 hover:underline">
             sample videos
           </Link>
           .

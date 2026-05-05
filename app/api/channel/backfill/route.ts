@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getBackfillLimits } from "@/lib/backfill-route-limits";
 import { analyzeUnseenChannelUploads } from "@/lib/channel-pulse";
 
-export const maxDuration = 900;
+export const maxDuration = 300;
 export const runtime = "nodejs";
 
 export async function GET() {

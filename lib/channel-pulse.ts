@@ -219,6 +219,13 @@ async function analyzeOneVideo(
 async function buildChannelPulse(
   cfg: ResolvedPulseEnv
 ): Promise<ChannelPulsePayload> {
+  // On Vercel /tmp is ephemeral and each request has a hard timeout (300s on
+  // Hobby). Running Claude on 20 fresh uploads per page load can't finish, so
+  // we only read warm cache here. The /api/channel/backfill route (driven by
+  // the "Fetch more analyses" button) does the actual analysis in
+  // platform‑sized chunks of 2 videos at a time.
+  const isVercel = process.env.VERCEL === "1";
+
   const uploadsPlaylistId = await fetchUploadsPlaylistId(
     cfg.channelId,
     cfg.ytKey
@@ -252,6 +259,8 @@ async function buildChannelPulse(
         analyses.push(warm);
         continue;
       }
+
+      if (isVercel) continue;
 
       const a = await analyzeOneVideo(cfg, vid);
       if (a) {

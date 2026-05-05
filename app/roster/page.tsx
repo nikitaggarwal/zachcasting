@@ -1,5 +1,12 @@
-import { redirect } from "next/navigation";
+import type { Metadata } from "next";
+import { RosterHomePage } from "@/components/RosterHomePage";
 
-export default function RosterRedirectPage() {
-  redirect("/");
+export const metadata: Metadata = {
+  title: "Cast roster",
+};
+
+export const dynamic = "force-dynamic";
+
+export default function RosterRoutePage() {
+  return <RosterHomePage />;
 }

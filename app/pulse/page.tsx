@@ -115,9 +115,15 @@ function VideosSection({
 }
 
 function PulseBody({ pulse }: { pulse: ChannelPulsePayload | null }) {
-  const alerts = pulse?.alerts ?? getAlerts();
-  const videos = pulse?.summaries ?? listPulseSummaries();
-  const channelDigest = pulse ? pulseChannelDigest() : null;
+  // Live pulse can return `{ summaries: [], alerts: [pulse-empty] }` on cold
+  // serverless starts (empty /tmp cache + per-request Claude runs that can't
+  // finish in the function timeout). Treat an empty live payload the same as
+  // "no live data yet" so the page keeps showing demo content instead of
+  // flashing real-then-empty when the user lands on it.
+  const hasLiveSummaries = (pulse?.summaries.length ?? 0) > 0;
+  const alerts = hasLiveSummaries ? pulse!.alerts : getAlerts();
+  const videos = hasLiveSummaries ? pulse!.summaries : listPulseSummaries();
+  const channelDigest = hasLiveSummaries ? pulseChannelDigest() : null;
 
   return (
     <div className="space-y-10">

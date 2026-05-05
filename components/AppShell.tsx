@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 const nav = [
-  { href: "/", label: "Cast Roster" },
+  { href: "/roster", label: "Cast Roster" },
   { href: "/videos", label: "Recent uploads" },
   { href: "/pulse#videos", label: "Channel pulse" },
   { href: "/add-video", label: "Add video" },
@@ -16,7 +16,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <p className="text-xs uppercase tracking-[0.22em] text-white/45">
               Dropouts-adjacent · Audience intel
             </p>
-            <Link href="/" className="group mt-1 inline-block">
+            <Link href="/roster" className="group mt-1 inline-block">
               <h1 className="font-display text-3xl font-semibold tracking-tight text-white md:text-4xl">
                 CastBoard
               </h1>

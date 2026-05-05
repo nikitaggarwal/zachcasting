@@ -52,10 +52,10 @@ export function VideoDrilldown({
           configure live channel pulse in environment variables.
         </p>
         <Link
-          href="/"
+          href="/roster"
           className="mt-6 inline-block rounded-lg border border-[var(--cast-gold)]/50 bg-[var(--cast-gold)]/15 px-5 py-2.5 text-sm text-[var(--cast-gold)]"
         >
-          Back to Channel Pulse
+          Back to cast roster
         </Link>
       </div>
     );
