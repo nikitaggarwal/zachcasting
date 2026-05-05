@@ -10,13 +10,30 @@ import {
   fetchVideoMeta,
 } from "@/lib/youtube";
 import { toPulseSummary } from "@/lib/mock-data";
-import { TRACKED_CAST_NAME_DEFAULTS } from "@/lib/channel-cast-defaults";
 import {
+  parseOptionalChannelCastNamesFromEnv,
+  PULSE_FIRST_RUN_CAST_NAMES,
+} from "@/lib/channel-cast-defaults";
+import {
+  getDistinctCastNamesFromStoredAnalyses,
   getStoredVideoAnalysis,
+  listStoredYoutubeIdsForChannel,
   normalizeCastSignature,
   tryGetWarmPulseAnalysis,
   upsertVideoAnalysis,
 } from "@/lib/analysis-store";
+
+export async function resolvePulseCastNamesForChannel(
+  channelId: string
+): Promise<string[]> {
+  const envOverride = parseOptionalChannelCastNamesFromEnv();
+  if (envOverride.length > 0) return envOverride;
+
+  const fromDb = await getDistinctCastNamesFromStoredAnalyses({ channelId });
+  if (fromDb.length > 0) return fromDb;
+
+  return [...PULSE_FIRST_RUN_CAST_NAMES];
+}
 
 export type ChannelPulsePayload = {
   summaries: VideoPulseSummary[];
@@ -35,29 +52,19 @@ type ResolvedPulseEnv = {
   revalidateSeconds: number;
 };
 
-function parsePulseEnv(): ResolvedPulseEnv | null {
+async function resolvePulseEnv(): Promise<ResolvedPulseEnv | null> {
   const ytKey = process.env.YOUTUBE_API_KEY ?? "";
   const anthKey = process.env.ANTHROPIC_API_KEY ?? "";
   const channelId = (process.env.YOUTUBE_CHANNEL_ID ?? "").trim();
-  const castRaw = (process.env.CHANNEL_CAST_NAMES ?? "").trim();
 
-  const fromEnv = [
-    ...new Set(
-      castRaw
-        .split(/[,|\n]+/)
-        .map((s) => s.trim())
-        .filter(Boolean)
-    ),
-  ];
+  if (!ytKey || !anthKey || !channelId) return null;
 
-  const names =
-    fromEnv.length > 0 ? fromEnv : [...new Set(TRACKED_CAST_NAME_DEFAULTS)];
-
-  if (!ytKey || !anthKey || !channelId || names.length === 0) return null;
+  const castNames = await resolvePulseCastNamesForChannel(channelId);
+  if (castNames.length === 0) return null;
 
   const maxVideos = Math.min(
-    30,
-    Math.max(1, Number(process.env.CHANNEL_PULSE_MAX_VIDEOS ?? "10"))
+    48,
+    Math.max(1, Number(process.env.CHANNEL_PULSE_MAX_VIDEOS ?? "20"))
   );
   const maxComments = Math.min(
     2000,
@@ -70,7 +77,7 @@ function parsePulseEnv(): ResolvedPulseEnv | null {
     ytKey,
     anthKey,
     channelId,
-    castNames: names,
+    castNames,
     maxVideos,
     maxComments,
     revalidateSeconds,
@@ -275,11 +282,121 @@ async function buildChannelPulse(
   };
 }
 
+export type AnalyzeUnseenResult = {
+  ok: boolean;
+  error?: string;
+  channelId?: string;
+  /** Video ids successfully analyzed and saved */
+  analyzedYoutubeIds: string[];
+  /** Attempted but no row saved (no comments, API error, etc.) */
+  skipped: { youtubeId: string; reason: string }[];
+};
+
+/**
+ * Walk the channel uploads playlist (newest first), skip ids already in SQLite, then
+ * run comment + Claude analysis on up to `maxNewVideos` unseen uploads.
+ */
+export async function analyzeUnseenChannelUploads(options: {
+  maxNewVideos?: number;
+  /** How far to scan the uploads playlist when looking for unseen ids */
+  playlistScanDepth?: number;
+}): Promise<AnalyzeUnseenResult> {
+  const maxNew = Math.min(120, Math.max(1, options.maxNewVideos ?? 40));
+  const scanDepth = Math.min(
+    800,
+    Math.max(40, options.playlistScanDepth ?? 400)
+  );
+
+  const cfg = await resolvePulseEnv();
+  if (!cfg) {
+    return {
+      ok: false,
+      error:
+        "Missing YOUTUBE_API_KEY, ANTHROPIC_API_KEY, or YOUTUBE_CHANNEL_ID",
+      analyzedYoutubeIds: [],
+      skipped: [],
+    };
+  }
+
+  const uploadsPlaylistId = await fetchUploadsPlaylistId(
+    cfg.channelId,
+    cfg.ytKey
+  );
+  if (!uploadsPlaylistId) {
+    return {
+      ok: false,
+      error: "Could not resolve channel uploads playlist",
+      channelId: cfg.channelId,
+      analyzedYoutubeIds: [],
+      skipped: [],
+    };
+  }
+
+  const candidates = await fetchRecentUploadVideoIds(
+    uploadsPlaylistId,
+    cfg.ytKey,
+    scanDepth
+  );
+  const already = new Set(await listStoredYoutubeIdsForChannel(cfg.channelId));
+  const unseen = candidates.filter((id) => !already.has(id)).slice(0, maxNew);
+
+  if (unseen.length === 0) {
+    return {
+      ok: true,
+      channelId: cfg.channelId,
+      analyzedYoutubeIds: [],
+      skipped: [],
+    };
+  }
+
+  const analyzedYoutubeIds: string[] = [];
+  const skipped: { youtubeId: string; reason: string }[] = [];
+
+  for (const vid of unseen) {
+    try {
+      const castNamesNow = await resolvePulseCastNamesForChannel(cfg.channelId);
+      const iterCfg: ResolvedPulseEnv = {
+        ...cfg,
+        castNames: castNamesNow,
+      };
+      const castSig = normalizeCastSignature(castNamesNow);
+
+      const a = await analyzeOneVideo(iterCfg, vid);
+      if (a) {
+        await upsertVideoAnalysis({
+          youtubeId: vid,
+          channelId: cfg.channelId,
+          castSignature: castSig,
+          analysis: a,
+        });
+        analyzedYoutubeIds.push(vid);
+      } else {
+        skipped.push({
+          youtubeId: vid,
+          reason: "No comments or analysis returned empty",
+        });
+      }
+    } catch (e) {
+      skipped.push({
+        youtubeId: vid,
+        reason: e instanceof Error ? e.message : "Unknown error",
+      });
+    }
+  }
+
+  return {
+    ok: true,
+    channelId: cfg.channelId,
+    analyzedYoutubeIds,
+    skipped,
+  };
+}
+
 /** Live pulse + per-video analyses; null when env is incomplete. Results persist in SQLite. */
 export async function fetchLiveChannelPulse(): Promise<
   ChannelPulsePayload | null
 > {
-  const cfg = parsePulseEnv();
+  const cfg = await resolvePulseEnv();
   if (!cfg) return null;
   try {
     return await buildChannelPulse(cfg);
@@ -294,7 +411,7 @@ export async function fetchLiveChannelPulse(): Promise<
 export async function hydrateVideoAnalysisFromChannelUploadsIfNeeded(
   youtubeIdLike: string
 ): Promise<VideoAnalysis | null> {
-  const cfg = parsePulseEnv();
+  const cfg = await resolvePulseEnv();
   if (!cfg) return null;
 
   const uploadsPlaylistId = await fetchUploadsPlaylistId(
@@ -332,9 +449,8 @@ export async function fetchPulseCachedAnalysisForVideo(
 }
 
 export function pulseChannelDigest(): string | null {
-  const cfg = parsePulseEnv();
-  if (!cfg) return null;
-  const id = cfg.channelId;
-  if (id.length <= 12) return id;
-  return `${id.slice(0, 4)}…${id.slice(-6)}`;
+  const channelId = (process.env.YOUTUBE_CHANNEL_ID ?? "").trim();
+  if (!channelId) return null;
+  if (channelId.length <= 12) return channelId;
+  return `${channelId.slice(0, 4)}…${channelId.slice(-6)}`;
 }

@@ -1,9 +1,10 @@
 import Link from "next/link";
 
 const nav = [
-  { href: "/", label: "Channel Pulse" },
-  { href: "/roster", label: "Cast Roster" },
-  { href: "/add-video", label: "Add Video" },
+  { href: "/", label: "Cast Roster" },
+  { href: "/videos", label: "Recent uploads" },
+  { href: "/pulse#videos", label: "Channel pulse" },
+  { href: "/add-video", label: "Add video" },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {

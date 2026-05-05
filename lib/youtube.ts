@@ -61,6 +61,60 @@ export async function fetchRecentUploadVideoIds(
   return ids.slice(0, limit);
 }
 
+export type ChannelUploadListItem = {
+  youtubeId: string;
+  title: string;
+  publishedAt: string;
+};
+
+/**
+ * Paginate the channel uploads playlist until empty. Order is newest-first
+ * (YouTube uploads playlist ordering).
+ */
+export async function fetchAllChannelUploads(
+  channelId: string,
+  apiKey: string
+): Promise<ChannelUploadListItem[]> {
+  const uploadsPlaylistId = await fetchUploadsPlaylistId(channelId, apiKey);
+  if (!uploadsPlaylistId) return [];
+
+  const rows: ChannelUploadListItem[] = [];
+  let pageToken: string | undefined;
+
+  do {
+    const u = new URL(PLAYLIST_ITEMS_URL);
+    u.searchParams.set("part", "snippet,contentDetails");
+    u.searchParams.set("playlistId", uploadsPlaylistId);
+    u.searchParams.set("maxResults", "50");
+    u.searchParams.set("key", apiKey);
+    if (pageToken) u.searchParams.set("pageToken", pageToken);
+
+    const res = await fetch(u.toString());
+    if (!res.ok) break;
+
+    const data = (await res.json()) as {
+      nextPageToken?: string;
+      items?: Array<{
+        snippet?: { title?: string; publishedAt?: string };
+        contentDetails?: { videoId?: string };
+      }>;
+    };
+
+    for (const item of data.items ?? []) {
+      const vid = item.contentDetails?.videoId;
+      if (!vid) continue;
+      rows.push({
+        youtubeId: vid,
+        title: item.snippet?.title ?? "Untitled",
+        publishedAt: item.snippet?.publishedAt?.slice(0, 10) ?? "",
+      });
+    }
+    pageToken = data.nextPageToken;
+  } while (pageToken);
+
+  return rows;
+}
+
 export function extractYoutubeVideoId(input: string): string | null {
   const trimmed = input.trim();
   const watch = /[?&]v=([a-zA-Z0-9_-]{11})/.exec(trimmed);

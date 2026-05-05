@@ -138,6 +138,68 @@ export async function getStoredVideoAnalysis(
 }
 
 /**
+ * All stored analyses, optionally scoped to a YouTube channel id.
+ * When `channelId` is omitted, every row is returned (e.g. multi-channel library).
+ */
+export async function listStoredVideoAnalyses(options?: {
+  channelId?: string;
+}): Promise<VideoAnalysis[]> {
+  const db = await resolveDb();
+  if (!db) return [];
+  const channelId = options?.channelId?.trim();
+  try {
+    const stmt = channelId
+      ? db.prepare(
+          `SELECT payload_json FROM video_analysis
+           WHERE channel_id = ? ORDER BY published_at DESC`
+        )
+      : db.prepare(
+          `SELECT payload_json FROM video_analysis ORDER BY published_at DESC`
+        );
+    const rows = (
+      channelId ? stmt.all(channelId) : stmt.all()
+    ) as { payload_json: string }[];
+    return rows.map((row) => JSON.parse(row.payload_json) as VideoAnalysis);
+  } catch {
+    return [];
+  }
+}
+
+/** YouTube video ids already stored for a channel (newest first). */
+export async function listStoredYoutubeIdsForChannel(
+  channelId: string
+): Promise<string[]> {
+  const db = await resolveDb();
+  if (!db) return [];
+  const id = channelId.trim();
+  if (!id) return [];
+  try {
+    const rows = db
+      .prepare(
+        `SELECT youtube_id FROM video_analysis WHERE channel_id = ? ORDER BY published_at DESC`
+      )
+      .all(id) as { youtube_id: string }[];
+    return rows.map((r) => r.youtube_id);
+  } catch {
+    return [];
+  }
+}
+
+/** Unique cast display names seen across stored analyses (optionally one channel). */
+export async function getDistinctCastNamesFromStoredAnalyses(options?: {
+  channelId?: string;
+}): Promise<string[]> {
+  const analyses = await listStoredVideoAnalyses(options);
+  const bySlug = new Map<string, string>();
+  for (const va of analyses) {
+    for (const c of va.cast) {
+      if (!bySlug.has(c.slug)) bySlug.set(c.slug, c.name);
+    }
+  }
+  return [...bySlug.values()].sort((a, b) => a.localeCompare(b));
+}
+
+/**
  * Pulse-only warm read: skip YouTube / Claude until TTL expires and cast list matches.
  */
 export async function tryGetWarmPulseAnalysis(args: {

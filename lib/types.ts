@@ -92,4 +92,6 @@ export type RosterRow = {
   lastAppearanceDate: string;
   trend: CastTrend;
   status: CastStatus;
+  /** Tracked name with no comment mentions in analyzed videos yet. */
+  noCommentDataYet?: boolean;
 };

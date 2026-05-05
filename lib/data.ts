@@ -1,9 +1,12 @@
+import "server-only";
+
 import type {
   VideoAnalysis,
   VideoPulseSummary,
   CastProfile,
-  RosterRow,
 } from "./types";
+import { listStoredVideoAnalyses } from "./analysis-store";
+import { buildCastProfileFromAnalyses } from "./roster-aggregate";
 import {
   MOCK_VIDEOS,
   MOCK_VIDEO_ORDER,
@@ -11,6 +14,9 @@ import {
   MOCK_CAST_PROFILES,
   toPulseSummary,
 } from "./mock-data";
+
+export type { RosterView } from "./roster-view";
+export { getRosterView } from "./roster-view";
 
 export function findMockVideo(id: string): VideoAnalysis | undefined {
   if (MOCK_VIDEOS[id]) return MOCK_VIDEOS[id];
@@ -25,20 +31,16 @@ export function getAlerts() {
   return MOCK_ALERTS;
 }
 
-export function getCastProfile(slug: string): CastProfile | undefined {
+export async function getCastProfile(
+  slug: string
+): Promise<CastProfile | undefined> {
+  const channelId = process.env.YOUTUBE_CHANNEL_ID?.trim();
+  const analyses = await listStoredVideoAnalyses(
+    channelId ? { channelId } : undefined
+  );
+  const derived = buildCastProfileFromAnalyses(slug, analyses);
+  if (derived) return derived;
   return MOCK_CAST_PROFILES[slug];
-}
-
-export function listRosterRows(): RosterRow[] {
-  return Object.values(MOCK_CAST_PROFILES).map((p) => ({
-    slug: p.slug,
-    name: p.name,
-    totalAppearances: p.appearanceCount,
-    avgSentimentPositive: p.avgPositivePct,
-    lastAppearanceDate: p.lastAppearanceDate,
-    trend: p.trend,
-    status: p.status,
-  }));
 }
 
 export { MOCK_VIDEOS, MOCK_VIDEO_ORDER };

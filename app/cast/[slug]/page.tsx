@@ -6,7 +6,7 @@ type Props = { params: Promise<{ slug: string }> };
 
 export default async function CastPage({ params }: Props) {
   const { slug } = await params;
-  const profile = getCastProfile(slug);
+  const profile = await getCastProfile(slug);
   if (!profile) notFound();
   return <CastProfileView profile={profile} />;
 }
