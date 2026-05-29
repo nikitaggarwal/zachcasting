@@ -4,92 +4,122 @@ export function AmbientBackground() {
       className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
       aria-hidden
     >
-      {/* Subtle dot field — reads as "analytics canvas" not decoration copy */}
+      {/* Halftone dot field — analog print feel */}
       <div
-        className="ambient-dots absolute inset-0 opacity-[0.35]"
+        className="absolute inset-0 opacity-[0.4]"
         style={{
           backgroundImage:
-            "radial-gradient(circle, rgba(255,255,255,0.055) 1px, transparent 1px)",
-          backgroundSize: "44px 44px",
+            "radial-gradient(circle, rgba(244,234,213,0.05) 1px, transparent 1px)",
+          backgroundSize: "40px 40px",
+          maskImage:
+            "radial-gradient(ellipse 80% 60% at 50% 40%, #000 0%, transparent 100%)",
+          WebkitMaskImage:
+            "radial-gradient(ellipse 80% 60% at 50% 40%, #000 0%, transparent 100%)",
         }}
       />
 
-      {/* Soft color mesh — amber / teal / muted coral */}
+      {/* Vertical column rules — broadcast deck grid */}
       <div
-        className="absolute -left-[20%] top-[18%] h-[58vmin] w-[58vmin] rounded-full bg-[rgba(212,162,76,0.11)] blur-3xl"
+        className="absolute inset-0 opacity-[0.4]"
+        style={{
+          backgroundImage:
+            "linear-gradient(90deg, rgba(244,234,213,0.04) 1px, transparent 1px)",
+          backgroundSize: "calc((100% - 2rem) / 12) 100%",
+          backgroundPosition: "1rem 0",
+        }}
+      />
+
+      {/* Warm corner wash */}
+      <div
+        className="absolute -left-[18%] -top-[8%] h-[68vmin] w-[68vmin] rounded-full bg-[rgba(224,169,109,0.08)] blur-[100px]"
         style={{ animation: "ambient-blob-a 38s ease-in-out infinite" }}
       />
       <div
-        className="absolute -right-[12%] top-[8%] h-[42vmin] w-[42vmin] rounded-full bg-[rgba(95,160,150,0.14)] blur-3xl"
+        className="absolute -bottom-[12%] -right-[10%] h-[58vmin] w-[58vmin] rounded-full bg-[rgba(255,77,60,0.05)] blur-[100px]"
         style={{
           animation: "ambient-blob-b 44s ease-in-out infinite",
           animationDelay: "-12s",
         }}
       />
+
+      {/* Ghost serif mark — "Z" for Zach, drifts behind everything */}
       <div
-        className="absolute -right-[8%] bottom-[12%] h-[52vmin] w-[52vmin] rounded-full bg-[rgba(80,130,125,0.12)] blur-3xl"
+        className="absolute left-1/2 top-1/2 text-[min(80vw,80vh)] leading-none text-[var(--cream)] select-none"
         style={{
-          animation: "ambient-blob-a 42s ease-in-out infinite reverse",
-          animationDelay: "-20s",
+          fontFamily: "var(--font-instrument), Georgia, serif",
+          fontStyle: "italic",
+          fontWeight: 400,
+          animation: "ghost-mark-drift 32s ease-in-out infinite",
         }}
-      />
-      <div
-        className="absolute left-[25%] bottom-[5%] h-[38vmin] w-[38vmin] rounded-full bg-[rgba(199,92,92,0.06)] blur-3xl"
-        style={{
-          animation: "ambient-blob-b 36s ease-in-out infinite",
-          animationDelay: "-6s",
-        }}
-      />
-      <div className="absolute left-[45%] top-[40%] -translate-x-1/2 -translate-y-1/2">
-        <div
-          className="h-[28vmin] w-[28vmin] rounded-full bg-[rgba(255,255,255,0.04)] blur-2xl"
-          style={{
-            animation: "ambient-blob-a 50s ease-in-out infinite",
-            animationDelay: "-25s",
-          }}
-        />
+      >
+        Z
       </div>
 
-      {/* Large thin rings — slow drift + rotation, no text */}
+      {/* Concentric registration ring — single, deliberate */}
       <div
-        className="absolute left-1/2 top-[42%] h-[min(140vmin,1400px)] w-[min(140vmin,1400px)] rounded-full border border-white/[0.07]"
-        style={{ animation: "ambient-ring 100s linear infinite" }}
+        className="absolute left-[88%] top-[18%] h-[min(38vmin,360px)] w-[min(38vmin,360px)] rounded-full border border-[rgba(224,169,109,0.12)]"
+        style={{ animation: "ambient-ring 120s linear infinite" }}
       />
       <div
-        className="absolute left-[42%] top-[48%] h-[min(95vmin,900px)] w-[min(95vmin,900px)] rounded-full border border-white/[0.05]"
+        className="absolute left-[88%] top-[18%] h-[min(38vmin,360px)] w-[min(38vmin,360px)] rounded-full border border-[rgba(244,234,213,0.05)]"
         style={{
-          animation: "ambient-ring-reverse 140s linear infinite",
-        }}
-      />
-      <div
-        className="absolute right-[-5%] top-[20%] h-[min(55vmin,500px)] w-[min(55vmin,500px)] rounded-full border border-[rgba(212,162,76,0.08)]"
-        style={{
-          animation: "ambient-drift-ring 48s ease-in-out infinite",
+          transform: "scale(0.75)",
+          transformOrigin: "left top",
+          animation: "ambient-ring-reverse 90s linear infinite",
         }}
       />
 
-      {/* Soft arc fragment — SVG, suggests charts without being literal */}
+      {/* Tick marks around an arc — broadcast clock fragment */}
       <svg
-        className="absolute -right-[8%] bottom-[22%] h-[min(45vmin,420px)] w-[min(45vmin,420px)] text-white/[0.06]"
+        className="absolute -left-[6%] bottom-[12%] h-[min(34vmin,300px)] w-[min(34vmin,300px)] text-[var(--cream)]/[0.08]"
         viewBox="0 0 200 200"
         fill="none"
         aria-hidden
-        style={{ animation: "ambient-svg-drift 55s ease-in-out infinite" }}
+        style={{ animation: "ambient-svg-drift 60s ease-in-out infinite" }}
       >
-        <path
-          d="M 20 120 A 80 80 0 0 1 160 100"
+        {Array.from({ length: 24 }).map((_, i) => {
+          const angle = (i / 24) * Math.PI * 2;
+          const x1 = 100 + Math.cos(angle) * 78;
+          const y1 = 100 + Math.sin(angle) * 78;
+          const x2 = 100 + Math.cos(angle) * (i % 6 === 0 ? 64 : 72);
+          const y2 = 100 + Math.sin(angle) * (i % 6 === 0 ? 64 : 72);
+          return (
+            <line
+              key={i}
+              x1={x1}
+              y1={y1}
+              x2={x2}
+              y2={y2}
+              stroke="currentColor"
+              strokeWidth={i % 6 === 0 ? 1.5 : 0.75}
+            />
+          );
+        })}
+        <circle
+          cx="100"
+          cy="100"
+          r="80"
           stroke="currentColor"
-          strokeWidth="1.25"
-          strokeLinecap="round"
-        />
-        <path
-          d="M 40 150 A 95 95 0 0 1 170 130"
-          stroke="currentColor"
-          strokeWidth="0.75"
-          strokeOpacity="0.7"
-          strokeLinecap="round"
+          strokeWidth="0.5"
         />
       </svg>
+
+      {/* Top vignette */}
+      <div
+        className="absolute inset-x-0 top-0 h-32"
+        style={{
+          background:
+            "linear-gradient(180deg, rgba(10,9,8,0.6) 0%, transparent 100%)",
+        }}
+      />
+      {/* Bottom vignette */}
+      <div
+        className="absolute inset-x-0 bottom-0 h-32"
+        style={{
+          background:
+            "linear-gradient(0deg, rgba(10,9,8,0.7) 0%, transparent 100%)",
+        }}
+      />
     </div>
   );
 }

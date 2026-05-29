@@ -151,26 +151,34 @@ export default function ChannelPulsePage() {
   const pulsePromise = fetchLiveChannelPulse();
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8">
+    <div className="mx-auto max-w-6xl">
       <PulseHashScroll />
-      <header className="max-w-3xl space-y-2">
-        <h2 className="font-display text-4xl font-semibold tracking-tight text-white md:text-5xl">
-          Channel pulse
+      <section className="relative">
+        <p className="eyebrow reveal-up">◆ § 03 — Vital signs</p>
+        <h2 className="reveal-up delay-1 mt-5 font-mono text-[clamp(2.25rem,6vw,4.5rem)] font-semibold uppercase leading-[0.92] tracking-[-0.03em] text-[var(--cream)]">
+          Channel{" "}
+          <span className="font-display italic text-[var(--gold)] lowercase">
+            pulse
+          </span>
         </h2>
-        <p className="text-sm leading-relaxed text-white/55 md:text-base">
-          Comment-driven read on recent uploads: who people are behind, who
+        <p className="reveal-up delay-2 mt-6 max-w-2xl text-base leading-relaxed text-[var(--text-muted)] md:text-lg">
+          A comment-driven read on recent uploads: who people are behind, who
           they&apos;re tired of, and which videos landed.
         </p>
-      </header>
+      </section>
 
-      <Suspense fallback={<PulseBody pulse={null} />}>
-        <LivePulseBody pulsePromise={pulsePromise} />
-      </Suspense>
+      <div className="section-rule mt-14 mb-8">
+        <span className="eyebrow-strong">— Latest reads</span>
+      </div>
 
-      <div className="max-w-xl pt-2">
-        <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/40">
-          Fetch more analyses
-        </p>
+      <div className="reveal-up delay-3">
+        <Suspense fallback={<PulseBody pulse={null} />}>
+          <LivePulseBody pulsePromise={pulsePromise} />
+        </Suspense>
+      </div>
+
+      <div className="mt-16 max-w-xl border-t border-[var(--rule)] pt-8">
+        <p className="eyebrow-strong mb-3">— Fetch more analyses</p>
         <AnalyzeUnseenUploadsButton />
       </div>
     </div>

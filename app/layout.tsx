@@ -1,23 +1,30 @@
 import type { Metadata } from "next";
-import { Playfair_Display, DM_Sans } from "next/font/google";
+import { Instrument_Serif, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { AmbientBackground } from "@/components/AmbientBackground";
 import { AppShell } from "@/components/AppShell";
 
-const playfair = Playfair_Display({
-  variable: "--font-playfair",
+const instrument = Instrument_Serif({
+  variable: "--font-instrument",
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
+  weight: ["400"],
+  style: ["normal", "italic"],
 });
 
-const dmSans = DM_Sans({
-  variable: "--font-dm-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
 });
 
+const jetbrains = JetBrains_Mono({
+  variable: "--font-jetbrains",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+});
+
 export const metadata: Metadata = {
-  title: "CastBoard · Audience intelligence",
+  title: "CASTBOARD · Zach Justice audience intel",
   description:
     "Per-person audience sentiment from YouTube comments — who to cast, who to rest.",
 };
@@ -30,10 +37,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${playfair.variable} ${dmSans.variable} h-full antialiased`}
+      className={`${instrument.variable} ${inter.variable} ${jetbrains.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="flex min-h-full flex-col" suppressHydrationWarning>
+      <body className="grain flex min-h-full flex-col" suppressHydrationWarning>
         <AmbientBackground />
         <AppShell>{children}</AppShell>
       </body>

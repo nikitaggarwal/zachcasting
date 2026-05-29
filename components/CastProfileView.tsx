@@ -21,37 +21,46 @@ export function CastProfileView({ profile }: { profile: CastProfile }) {
   }));
 
   return (
-    <div className="mx-auto max-w-4xl space-y-10">
-      <header className="frosted-card p-8 md:p-10">
-        <p className="text-xs uppercase tracking-[0.22em] text-white/45">
-          Cast member profile
-        </p>
-        <h1 className="font-display mt-2 text-5xl font-semibold text-white md:text-6xl">
+    <div className="mx-auto max-w-4xl space-y-12">
+      <header className="reveal-up">
+        <p className="eyebrow">◆ Player card</p>
+        <h1 className="font-display mt-4 text-[clamp(3rem,8vw,6rem)] italic leading-[0.95] text-[var(--cream)]">
           {profile.name}
         </h1>
         {profile.social ? (
-          <p className="mt-4 text-sm text-[var(--cast-gold)]">{profile.social}</p>
+          <p className="mt-3 font-mono text-xs uppercase tracking-[0.2em] text-[var(--gold)]">
+            {profile.social}
+          </p>
         ) : null}
-        <div className="mt-6 flex flex-wrap gap-6 text-sm text-white/55">
-          <span>
-            <strong className="text-white">{profile.appearanceCount}</strong>{" "}
-            appearances in library
-          </span>
-          <span>
-            Avg. positive weight{" "}
-            <strong className="text-positive">{profile.avgPositivePct}%</strong>
-          </span>
-          <span
-            className={
-              profile.status === "Hot"
-                ? "text-positive"
-                : profile.status === "Resting"
-                  ? "text-negative"
-                  : "text-white/70"
-            }
-          >
-            Status: {profile.status}
-          </span>
+        <div className="mt-8 grid grid-cols-3 gap-px overflow-hidden border border-[var(--rule)] bg-[var(--rule)]">
+          <div className="stat-tile bg-[var(--ink)]">
+            <p className="eyebrow">Appearances</p>
+            <p className="mt-2 font-display text-3xl text-[var(--cream)]">
+              {profile.appearanceCount}
+            </p>
+          </div>
+          <div className="stat-tile bg-[var(--ink)]">
+            <p className="eyebrow">Avg. positive</p>
+            <p className="mt-2 font-display text-3xl text-[var(--gold)]">
+              {profile.avgPositivePct}%
+            </p>
+          </div>
+          <div className="stat-tile bg-[var(--ink)]">
+            <p className="eyebrow">Status</p>
+            <p
+              className="mt-2 font-display text-3xl"
+              style={{
+                color:
+                  profile.status === "Hot"
+                    ? "var(--gold)"
+                    : profile.status === "Resting"
+                      ? "#ff8478"
+                      : "var(--cream)",
+              }}
+            >
+              {profile.status}
+            </p>
+          </div>
         </div>
       </header>
 
